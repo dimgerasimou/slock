@@ -23,3 +23,6 @@ Afterwards enter the following command to build and install slock
 ## Running slock
 
 Simply invoke the 'slock' command. To get out of it, enter your password.
+
+## Patches
+- dwmlogoandblurscreen
