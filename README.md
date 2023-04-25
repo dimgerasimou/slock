@@ -27,3 +27,4 @@ Simply invoke the 'slock' command. To get out of it, enter your password.
 ## Patches
 - dwmlogoandblurscreen
 - dpms
+- quickcancel
