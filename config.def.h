@@ -13,10 +13,10 @@ static const char *colorname[NUMCOLS] = {
 static const int failonclear = 1;
 
 /* time in seconds before the monitor shuts down */
-static const int monitortime = 5;
+static const int monitortime = 30;
 
 /* time in seconds to cancel lock with mouse movement */
-static const int timetocancel = 5;
+static const int timetocancel = 3;
 
 static const int logosize = 75;
 static const int logow = 12; /* Grid width and height for right center alignment*/
