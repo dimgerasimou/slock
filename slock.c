@@ -24,6 +24,7 @@
 #include <X11/keysym.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/Xatom.h>
 #include <Imlib2.h>
 
 #include "arg.h"
@@ -34,7 +35,7 @@ char *argv0;
 static time_t locktime;
 
 enum {
-    BACKGROUND,
+	BACKGROUND,
 	INIT,
 	INPUT,
 	FAILED,
@@ -49,11 +50,11 @@ struct lock {
 	Pixmap pmap;
 	Pixmap bgmap;
 	unsigned long colors[NUMCOLS];
-    unsigned int x, y;
-    unsigned int xoff, yoff, mw, mh;
-    Drawable drawable;
-    GC gc;
-    XRectangle rectangles[LENGTH(rectangles)];
+	unsigned int x, y;
+	unsigned int xoff, yoff, mw, mh;
+	Drawable drawable;
+	GC gc;
+	XRectangle rectangles[LENGTH(rectangles)];
 };
 
 struct xrandr {
@@ -149,9 +150,9 @@ resizerectangles(struct lock *lock)
 
 	for (i = 0; i < LENGTH(rectangles); i++){
 		lock->rectangles[i].x = (rectangles[i].x * logosize)
-                                + lock->xoff + ((lock->mw) / 2) - (logow / 2 * logosize);
+		                         + lock->xoff + ((lock->mw) / 2) - (logow / 2 * logosize);
 		lock->rectangles[i].y = (rectangles[i].y * logosize)
-                                + lock->yoff + ((lock->mh) / 2) - (logoh / 2 * logosize);
+		                         + lock->yoff + ((lock->mh) / 2) - (logoh / 2 * logosize);
 		lock->rectangles[i].width = rectangles[i].width * logosize;
 		lock->rectangles[i].height = rectangles[i].height * logosize;
 	}
@@ -232,12 +233,12 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 			color = len ? INPUT : ((failure || failonclear) ? FAILED : INIT);
 			if (running && oldc != color) {
 				for (screen = 0; screen < nscreens; screen++) {
-                    if(locks[screen]->bgmap)
-                        XSetWindowBackgroundPixmap(dpy, locks[screen]->win, locks[screen]->bgmap);
-                    else
-                        XSetWindowBackground(dpy, locks[screen]->win, locks[screen]->colors[0]);
+			if(locks[screen]->bgmap)
+				XSetWindowBackgroundPixmap(dpy, locks[screen]->win, locks[screen]->bgmap);
+			else
+				XSetWindowBackground(dpy, locks[screen]->win, locks[screen]->colors[0]);
 					//XClearWindow(dpy, locks[screen]->win);
-                    drawlogo(dpy, locks[screen], color);
+					drawlogo(dpy, locks[screen], color);
 				}
 				oldc = color;
 			}
@@ -283,17 +284,17 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 	lock->screen = screen;
 	lock->root = RootWindow(dpy, lock->screen);
 
-    if(image) 
-    {
-        lock->bgmap = XCreatePixmap(dpy, lock->root, DisplayWidth(dpy, lock->screen), DisplayHeight(dpy, lock->screen), DefaultDepth(dpy, lock->screen));
-        imlib_context_set_image(image);
-        imlib_context_set_display(dpy);
-        imlib_context_set_visual(DefaultVisual(dpy, lock->screen));
-        imlib_context_set_colormap(DefaultColormap(dpy, lock->screen));
-        imlib_context_set_drawable(lock->bgmap);
-        imlib_render_image_on_drawable(0, 0);
-        imlib_free_image();
-    }
+	if(image) 
+	{
+		lock->bgmap = XCreatePixmap(dpy, lock->root, DisplayWidth(dpy, lock->screen), DisplayHeight(dpy, lock->screen), DefaultDepth(dpy, lock->screen));
+		imlib_context_set_image(image);
+		imlib_context_set_display(dpy);
+		imlib_context_set_visual(DefaultVisual(dpy, lock->screen));
+		imlib_context_set_colormap(DefaultColormap(dpy, lock->screen));
+		imlib_context_set_drawable(lock->bgmap);
+		imlib_render_image_on_drawable(0, 0);
+		imlib_free_image();
+	}
 	for (i = 0; i < NUMCOLS; i++) {
 		XAllocNamedColor(dpy, DefaultColormap(dpy, lock->screen),
 		                 colorname[i], &color, &dummy);
@@ -316,7 +317,7 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 		lock->mh = lock->y;
 	}
 	lock->drawable = XCreatePixmap(dpy, lock->root,
-            lock->x, lock->y, DefaultDepth(dpy, screen));
+	                               lock->x, lock->y, DefaultDepth(dpy, screen));
 	lock->gc = XCreateGC(dpy, lock->root, 0, NULL);
 	XSetLineAttributes(dpy, lock->gc, 1, LineSolid, CapButt, JoinMiter);
 
@@ -329,14 +330,23 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 	                          CopyFromParent,
 	                          DefaultVisual(dpy, lock->screen),
 	                          CWOverrideRedirect | CWBackPixel, &wa);
-    if(lock->bgmap)
-        XSetWindowBackgroundPixmap(dpy, lock->win, lock->bgmap);
+	if(lock->bgmap)
+		XSetWindowBackgroundPixmap(dpy, lock->win, lock->bgmap);
 	lock->pmap = XCreateBitmapFromData(dpy, lock->win, curs, 8, 8);
 	invisible = XCreatePixmapCursor(dpy, lock->pmap, lock->pmap,
 	                                &color, &color, 0, 0);
 	XDefineCursor(dpy, lock->win, invisible);
 
 	resizerectangles(lock);
+
+	XClassHint *class_hint = XAllocClassHint();
+	if (class_hint == NULL) {
+		die("Unable to allocate XClassHint\n");
+	}
+	class_hint->res_name = "slock";
+	class_hint->res_class = "Slock";
+	XSetClassHint(dpy, lock->win, class_hint);
+	XFree(class_hint);
 
 	/* Try to grab mouse pointer *and* keyboard for 600ms, else fail the lock */
 	for (i = 0, ptgrab = kbgrab = -1; i < 6; i++) {
@@ -410,13 +420,13 @@ main(int argc, char **argv) {
 
 	/* validate drop-user and -group */
 	errno = 0;
-	if (!(pwd = getpwnam(user)))
-		die("slock: getpwnam %s: %s\n", user,
+	if (!(pwd = getpwnam(getenv("USER"))))
+		die("slock: getpwnam %s: %s\n", getenv("USER"),
 		    errno ? strerror(errno) : "user entry not found");
 	duid = pwd->pw_uid;
 	errno = 0;
-	if (!(grp = getgrnam(group)))
-		die("slock: getgrnam %s: %s\n", group,
+	if (!(grp = getgrnam(getenv("USER"))))
+		die("slock: getgrnam %s: %s\n", getenv("USER"),
 		    errno ? strerror(errno) : "group entry not found");
 	dgid = grp->gr_gid;
 
