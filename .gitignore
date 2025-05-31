@@ -2,3 +2,4 @@
 slock
 config.h
 .cache
+compile_commands.json
