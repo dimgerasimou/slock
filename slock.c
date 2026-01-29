@@ -523,17 +523,19 @@ main(int argc, char **argv) {
 	if (nlocks != nscreens)
 		return 1;
 
-	/* DPMS magic to disable the monitor */
-	if (!DPMSCapable(dpy))
-		die("slock: DPMSCapable failed\n");
-	if (!DPMSEnable(dpy))
-		die("slock: DPMSEnable failed\n");
-	if (!DPMSGetTimeouts(dpy, &standby, &suspend, &off))
-		die("slock: DPMSGetTimeouts failed\n");
-	if (!standby || !suspend || !off)
-		die("slock: at least one DPMS variable is zero\n");
-	if (!DPMSSetTimeouts(dpy, monitortime, monitortime, monitortime))
-		die("slock: DPMSSetTimeouts failed\n");
+	if (monitortime) {
+		/* DPMS magic to disable the monitor */
+		if (!DPMSCapable(dpy))
+			die("slock: DPMSCapable failed\n");
+		if (!DPMSEnable(dpy))
+			die("slock: DPMSEnable failed\n");
+		if (!DPMSGetTimeouts(dpy, &standby, &suspend, &off))
+			die("slock: DPMSGetTimeouts failed\n");
+		if (!standby || !suspend || !off)
+			die("slock: at least one DPMS variable is zero\n");
+		if (!DPMSSetTimeouts(dpy, monitortime, monitortime, monitortime))
+			die("slock: DPMSSetTimeouts failed\n");
+	}
 
 	XSync(dpy, 0);
 
@@ -560,7 +562,8 @@ main(int argc, char **argv) {
 	}
 
 	/* reset DPMS values to inital ones */
-	DPMSSetTimeouts(dpy, standby, suspend, off);
+	if (monitortime)
+		DPMSSetTimeouts(dpy, standby, suspend, off);
 	XSync(dpy, 0);
 
 	XSync(dpy, 0);

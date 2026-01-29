@@ -8,7 +8,7 @@ static const char *colorname[NUMCOLS] = {
 /* treat a cleared input like a wrong password (color) */
 static const int failonclear = 1;
 
-/* time in seconds before the monitor shuts down */
+/* time in seconds before the monitor shuts down (0 to disable)*/
 static const int monitortime = 30;
 
 /* time in seconds to cancel lock with mouse movement */
